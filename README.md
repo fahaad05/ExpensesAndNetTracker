@@ -39,6 +39,12 @@ The database path can be configured with:
 TRACKER_DB_PATH=/absolute/path/to/tracker.sqlite
 ```
 
+Optional demo auto-seed on first boot:
+
+```bash
+DEMO_SEED_ON_BOOT=true
+```
+
 You can put this in `.env`.
 
 Example for a personal local setup:
@@ -49,6 +55,8 @@ TRACKER_DB_PATH="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Finance/expe
 
 This lets you keep the production demo and your personal data fully separate.
 
+For a public demo deployment, set `DEMO_SEED_ON_BOOT=true` and leave `TRACKER_DB_PATH` pointing to a demo-only database location.
+
 ## Demo data
 
 `npm run db:seed` loads starter demo data for:
@@ -58,6 +66,7 @@ This lets you keep the production demo and your personal data fully separate.
 - fixed expenses
 - investments
 - shared-account transactions
+- Cashew imported transactions and review-builder data
 
 The seed is safe to re-run because it only fills an empty database.
 

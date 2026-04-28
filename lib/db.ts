@@ -475,6 +475,11 @@ function hasSeedData() {
   return result.count > 0;
 }
 
+function shouldAutoSeedDemoData() {
+  const value = process.env.DEMO_SEED_ON_BOOT?.trim().toLowerCase();
+  return value === "1" || value === "true" || value === "yes";
+}
+
 function normalizeInvestmentSeries(name: string, account: string) {
   const rows = db
     .prepare(
@@ -542,13 +547,7 @@ function normalizeAllInvestmentSeries() {
   })();
 }
 
-export function seedStarterData() {
-  ensureDatabase();
-
-  if (hasSeedData()) {
-    return;
-  }
-
+function seedStarterDataCore() {
   const monthly = db.prepare(`
     INSERT INTO monthly_reviews (
       month, review_date, income, expenses, savings, expense_rate, investments, investment_rate,
@@ -588,6 +587,17 @@ export function seedStarterData() {
   const shared = db.prepare(`
     INSERT INTO shared_account_transactions (transaction_date, description, category, amount, used_by, notes)
     VALUES (@transactionDate, @description, @category, @amount, @usedBy, @notes)
+  `);
+
+  const cashew = db.prepare(`
+    INSERT INTO cashew_transactions (
+      external_key, source_file, import_label, account, amount, currency, title, note, transaction_date,
+      income, transaction_type, category_name, subcategory_name, excluded, exclusion_reason, imported_at
+    )
+    VALUES (
+      @externalKey, @sourceFile, @importLabel, @account, @amount, @currency, @title, @note, @transactionDate,
+      @income, @transactionType, @categoryName, @subcategoryName, @excluded, @exclusionReason, @importedAt
+    )
   `);
 
   db.transaction(() => {
@@ -783,12 +793,130 @@ export function seedStarterData() {
         notes: "Personal item for partner"
       }
     ].forEach((entry) => shared.run(entry));
+
+    const importedAt = "2026-04-25T10:15:00.000Z";
+    const sourceFile = "demo-cashew-march-april.csv";
+    const importLabel = "March - April 2026";
+
+    [
+      {
+        account: "Main Card",
+        amount: -82.4,
+        currency: "CHF",
+        title: "Groceries",
+        note: "Weekly household shopping",
+        transactionDate: "2026-03-26",
+        income: false,
+        transactionType: "expense",
+        categoryName: "Food",
+        subcategoryName: "Groceries"
+      },
+      {
+        account: "Main Card",
+        amount: -24.9,
+        currency: "CHF",
+        title: "Streaming Subscription",
+        note: "",
+        transactionDate: "2026-03-28",
+        income: false,
+        transactionType: "expense",
+        categoryName: "Subscriptions",
+        subcategoryName: "Entertainment"
+      },
+      {
+        account: "Travel Card",
+        amount: -110,
+        currency: "EUR",
+        title: "Hotel Deposit",
+        note: "Weekend city break",
+        transactionDate: "2026-04-02",
+        income: false,
+        transactionType: "expense",
+        categoryName: "Travel",
+        subcategoryName: "Accommodation"
+      },
+      {
+        account: "Main Card",
+        amount: -64.5,
+        currency: "CHF",
+        title: "Train Pass",
+        note: "",
+        transactionDate: "2026-04-06",
+        income: false,
+        transactionType: "expense",
+        categoryName: "Transport",
+        subcategoryName: "Public transport"
+      },
+      {
+        account: "Main Account",
+        amount: 6350,
+        currency: "CHF",
+        title: "Salary",
+        note: "",
+        transactionDate: "2026-04-25",
+        income: true,
+        transactionType: "income",
+        categoryName: "Income",
+        subcategoryName: "Salary"
+      },
+      {
+        account: "Main Card",
+        amount: -420,
+        currency: "CHF",
+        title: "Tax advance",
+        note: "",
+        transactionDate: "2026-04-11",
+        income: false,
+        transactionType: "expense",
+        categoryName: "Taxes",
+        subcategoryName: "Advance payment"
+      },
+      {
+        account: "Main Card",
+        amount: -58,
+        currency: "CHF",
+        title: "Balance correction",
+        note: "saldo aggiornato",
+        transactionDate: "2026-04-15",
+        income: false,
+        transactionType: "expense",
+        categoryName: "Correzione saldo",
+        subcategoryName: "Adjustment"
+      }
+    ].forEach((row) => {
+      const exclusionReason = getCashewAutoExclusionReason(row);
+      cashew.run({
+        ...row,
+        externalKey: buildCashewExternalKey(row),
+        sourceFile,
+        importLabel,
+        importedAt,
+        income: row.income ? 1 : 0,
+        excluded: exclusionReason ? 1 : 0,
+        exclusionReason
+      });
+    });
   })();
 }
 
 export function ensureDatabase() {
   initSchema();
   normalizeAllInvestmentSeries();
+
+  if (shouldAutoSeedDemoData() && !hasSeedData()) {
+    seedStarterDataCore();
+    normalizeAllInvestmentSeries();
+  }
+}
+
+export function seedStarterData() {
+  ensureDatabase();
+
+  if (hasSeedData()) {
+    return;
+  }
+
+  seedStarterDataCore();
 }
 
 export function getDashboardData(): DashboardData {

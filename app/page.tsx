@@ -3,8 +3,9 @@ import Link from "next/link";
 
 import { NetWorthTrendChart, SavingsTrendChart } from "@/components/dashboard-charts";
 import { FixedExpenseManager } from "@/components/fixed-expense-manager";
+import { InstallmentPlanManager } from "@/components/installment-plan-manager";
 import { InvestmentManager } from "@/components/investment-manager";
-import { FixedExpenseForm, InvestmentForm } from "@/components/forms";
+import { FixedExpenseForm, InstallmentPlanForm, InvestmentForm } from "@/components/forms";
 import { getDashboardData } from "@/lib/db";
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { getMonthlyInsights, getQuarterlyInsights } from "@/lib/insights";
@@ -307,6 +308,30 @@ export default function HomePage() {
         </div>
         <InvestmentForm />
         <InvestmentManager investments={data.investments} />
+      </section>
+
+      <section className="panel">
+        <SectionHeader
+          eyebrow={t.home.installments}
+          title={t.home.installmentsTitle}
+          description={t.home.installmentsDescription}
+        />
+        <div className="mini-stats installment-mini-stats">
+          <div>
+            <span>{t.home.totalMonthlyCommitment}</span>
+            <strong>{formatCurrency(data.installmentSummary.totalMonthlyCommitment)}</strong>
+          </div>
+          <div>
+            <span>{t.home.totalRemaining}</span>
+            <strong>{formatCurrency(data.installmentSummary.totalRemaining)}</strong>
+          </div>
+          <div>
+            <span>{t.home.activePlans}</span>
+            <strong>{data.installmentSummary.activePlans}</strong>
+          </div>
+        </div>
+        <InstallmentPlanForm />
+        <InstallmentPlanManager plans={data.installmentPlans} />
       </section>
 
     </main>

@@ -7,12 +7,15 @@ import {
   deleteAllCashewImports,
   deleteCashewImportBySourceFile,
   deleteFixedExpense,
+  deleteInstallmentPlan,
   deleteInvestment,
   deleteMonthlyReview,
   deleteQuarterlyReview,
   importCashewTransactions,
   importSharedTransactions,
+  incrementInstallmentPaid,
   insertFixedExpense,
+  insertInstallmentPlan,
   insertInvestment,
   insertMonthlyReview,
   insertQuarterlyReview,
@@ -21,6 +24,7 @@ import {
   insertSharedTransaction,
   setCashewTransactionExcluded,
   updateSharedTransaction,
+  updateInstallmentPlan,
   updateInvestment,
   updateMonthlyReview,
   updateQuarterlyReview,
@@ -102,6 +106,21 @@ const sharedTransactionSchema = z.object({
 });
 
 const sharedTransactionUpdateSchema = sharedTransactionSchema.extend({
+  id: z.coerce.number().int().positive()
+});
+
+const installmentPlanSchema = z.object({
+  name: z.string().min(2),
+  category: z.string().default(""),
+  totalAmount: z.coerce.number().positive(),
+  installmentAmount: z.coerce.number().positive(),
+  totalInstallments: z.coerce.number().int().positive(),
+  paidInstallments: z.coerce.number().int().min(0).default(0),
+  startDate: z.string().min(8),
+  notes: z.string().default("")
+});
+
+const installmentPlanUpdateSchema = installmentPlanSchema.extend({
   id: z.coerce.number().int().positive()
 });
 
@@ -220,6 +239,30 @@ export async function removeSharedTransaction(formData: FormData) {
   deleteSharedTransaction(parsed.id);
   revalidatePath("/");
   revalidatePath("/shared-account");
+}
+
+export async function saveInstallmentPlan(formData: FormData) {
+  const parsed = installmentPlanSchema.parse(Object.fromEntries(formData));
+  insertInstallmentPlan(parsed);
+  revalidatePath("/");
+}
+
+export async function editInstallmentPlan(formData: FormData) {
+  const parsed = installmentPlanUpdateSchema.parse(Object.fromEntries(formData));
+  updateInstallmentPlan(parsed);
+  revalidatePath("/");
+}
+
+export async function removeInstallmentPlan(formData: FormData) {
+  const parsed = deleteByIdSchema.parse(Object.fromEntries(formData));
+  deleteInstallmentPlan(parsed.id);
+  revalidatePath("/");
+}
+
+export async function markInstallmentAsPaid(formData: FormData) {
+  const parsed = deleteByIdSchema.parse(Object.fromEntries(formData));
+  incrementInstallmentPaid(parsed.id);
+  revalidatePath("/");
 }
 
 export async function importSharedAccountNotionCsv(formData: FormData) {

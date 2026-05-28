@@ -75,6 +75,20 @@ export type Investment = {
   asOfDate: string;
 };
 
+export type InstallmentPlan = {
+  id: number;
+  name: string;
+  category: string;
+  totalAmount: number;
+  installmentAmount: number;
+  totalInstallments: number;
+  paidInstallments: number;
+  startDate: string;
+  notes: string;
+};
+
+type InstallmentPlanInput = Omit<InstallmentPlan, "id">;
+
 type InvestmentInput = {
   name: string;
   account: string;
@@ -106,6 +120,7 @@ export type DashboardData = {
   quarterlyReviews: QuarterlyReview[];
   fixedExpenses: FixedExpense[];
   investments: Investment[];
+  installmentPlans: InstallmentPlan[];
   sharedTransactions: SharedTransaction[];
   cashewTransactions: CashewTransaction[];
   cashewImports: CashewImportFile[];
@@ -114,6 +129,11 @@ export type DashboardData = {
   fixedExpenseSummary: {
     monthlyTotal: number;
     yearlyTotal: number;
+  };
+  installmentSummary: {
+    totalMonthlyCommitment: number;
+    totalRemaining: number;
+    activePlans: number;
   };
   sharedAccountSummary: {
     total: number;
@@ -379,6 +399,18 @@ function initSchema() {
       as_of_date TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS installment_plans (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      category TEXT NOT NULL DEFAULT '',
+      total_amount REAL NOT NULL,
+      installment_amount REAL NOT NULL,
+      total_installments INTEGER NOT NULL,
+      paid_installments INTEGER NOT NULL DEFAULT 0,
+      start_date TEXT NOT NULL,
+      notes TEXT NOT NULL DEFAULT ''
+    );
+
     CREATE TABLE IF NOT EXISTS shared_account_transactions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       transaction_date TEXT NOT NULL,
@@ -589,6 +621,11 @@ function seedStarterDataCore() {
     VALUES (@transactionDate, @description, @category, @amount, @usedBy, @notes)
   `);
 
+  const installmentPlan = db.prepare(`
+    INSERT INTO installment_plans (name, category, total_amount, installment_amount, total_installments, paid_installments, start_date, notes)
+    VALUES (@name, @category, @totalAmount, @installmentAmount, @totalInstallments, @paidInstallments, @startDate, @notes)
+  `);
+
   const cashew = db.prepare(`
     INSERT INTO cashew_transactions (
       external_key, source_file, import_label, account, amount, currency, title, note, transaction_date,
@@ -794,6 +831,29 @@ function seedStarterDataCore() {
       }
     ].forEach((entry) => shared.run(entry));
 
+    [
+      {
+        name: "Car Leasing",
+        category: "Leasing",
+        totalAmount: 24000,
+        installmentAmount: 400,
+        totalInstallments: 60,
+        paidInstallments: 21,
+        startDate: "2024-07-01",
+        notes: "5-year lease, ends June 2029."
+      },
+      {
+        name: "MacBook Pro",
+        category: "Tech Financing",
+        totalAmount: 2800,
+        installmentAmount: 233.34,
+        totalInstallments: 12,
+        paidInstallments: 8,
+        startDate: "2025-09-01",
+        notes: "0% financing, ends August 2026."
+      }
+    ].forEach((entry) => installmentPlan.run(entry));
+
     const importedAt = "2026-04-25T10:15:00.000Z";
     const sourceFile = "demo-cashew-march-april.csv";
     const importLabel = "March - April 2026";
@@ -993,6 +1053,23 @@ export function getDashboardData(): DashboardData {
     )
     .all() as Investment[];
 
+  const installmentPlans = db
+    .prepare(
+      `SELECT
+         id,
+         name,
+         category,
+         total_amount AS totalAmount,
+         installment_amount AS installmentAmount,
+         total_installments AS totalInstallments,
+         paid_installments AS paidInstallments,
+         start_date AS startDate,
+         notes
+       FROM installment_plans
+       ORDER BY start_date ASC, id ASC`
+    )
+    .all() as InstallmentPlan[];
+
   const sharedTransactions = db
     .prepare(
       `SELECT
@@ -1074,6 +1151,20 @@ export function getDashboardData(): DashboardData {
     { monthlyTotal: 0, yearlyTotal: 0 }
   );
 
+  const installmentSummary = installmentPlans.reduce(
+    (summary, plan) => {
+      const isActive = plan.paidInstallments < plan.totalInstallments;
+      if (isActive) {
+        summary.activePlans += 1;
+        summary.totalMonthlyCommitment += plan.installmentAmount;
+      }
+      const paidAmount = plan.paidInstallments * plan.installmentAmount;
+      summary.totalRemaining += Math.max(0, plan.totalAmount - paidAmount);
+      return summary;
+    },
+    { totalMonthlyCommitment: 0, totalRemaining: 0, activePlans: 0 }
+  );
+
   const sharedAccountSummary = sharedTransactions.reduce(
     (summary, tx) => {
       summary.total += tx.amount;
@@ -1127,12 +1218,14 @@ export function getDashboardData(): DashboardData {
     quarterlyReviews,
     fixedExpenses,
     investments,
+    installmentPlans,
     sharedTransactions,
     cashewTransactions,
     cashewImports,
     monthlyTrend,
     netWorthTrend,
     fixedExpenseSummary,
+    installmentSummary,
     sharedAccountSummary,
     investmentSummary,
     cashewImportSummary
@@ -1565,4 +1658,46 @@ export function deleteAllCashewImports() {
 export function renameCashewImport(sourceFile: string, importLabel: string) {
   ensureDatabase();
   db.prepare(`UPDATE cashew_transactions SET import_label = ? WHERE source_file = ?`).run(importLabel, sourceFile);
+}
+
+export function insertInstallmentPlan(input: InstallmentPlanInput) {
+  ensureDatabase();
+  db.prepare(
+    `INSERT INTO installment_plans (
+       name, category, total_amount, installment_amount, total_installments, paid_installments, start_date, notes
+     ) VALUES (
+       @name, @category, @totalAmount, @installmentAmount, @totalInstallments, @paidInstallments, @startDate, @notes
+     )`
+  ).run(input);
+}
+
+export function updateInstallmentPlan(input: InstallmentPlan) {
+  ensureDatabase();
+  db.prepare(
+    `UPDATE installment_plans
+     SET
+       name = @name,
+       category = @category,
+       total_amount = @totalAmount,
+       installment_amount = @installmentAmount,
+       total_installments = @totalInstallments,
+       paid_installments = @paidInstallments,
+       start_date = @startDate,
+       notes = @notes
+     WHERE id = @id`
+  ).run(input);
+}
+
+export function deleteInstallmentPlan(id: number) {
+  ensureDatabase();
+  db.prepare(`DELETE FROM installment_plans WHERE id = ?`).run(id);
+}
+
+export function incrementInstallmentPaid(id: number) {
+  ensureDatabase();
+  db.prepare(
+    `UPDATE installment_plans
+     SET paid_installments = MIN(paid_installments + 1, total_installments)
+     WHERE id = ?`
+  ).run(id);
 }

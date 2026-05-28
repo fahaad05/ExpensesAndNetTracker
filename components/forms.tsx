@@ -1,5 +1,6 @@
 import {
   saveFixedExpense,
+  saveInstallmentPlan,
   saveInvestment,
   saveMonthlyReview,
   saveQuarterlyReview,
@@ -151,6 +152,34 @@ export function SharedTransactionForm() {
         </label>
       </div>
       <button type="submit">{t.forms.addSharedTransaction}</button>
+    </form>
+  );
+}
+
+export function InstallmentPlanForm() {
+  const t = getTranslations();
+  return (
+    <form action={saveInstallmentPlan} className="entry-form compact-form">
+      <div className="form-grid">
+        <Field label={t.forms.planName} name="name" placeholder="MacBook Pro Leasing" />
+        <Field label={t.forms.category} name="category" placeholder="Leasing" required={false} />
+        <Field label={t.forms.totalAmount} name="totalAmount" type="number" />
+        <Field label={t.forms.installmentAmount} name="installmentAmount" type="number" />
+        <Field label={t.forms.totalInstallments} name="totalInstallments" type="number" />
+        <Field
+          label={t.forms.paidInstallments}
+          name="paidInstallments"
+          type="number"
+          placeholder="0"
+          required={false}
+        />
+        <Field label={t.forms.startDate} name="startDate" type="date" />
+        <label className="field field-full">
+          <span>{t.common.notes}</span>
+          <input name="notes" placeholder={t.forms.optionalContext} />
+        </label>
+      </div>
+      <button type="submit">{t.forms.addInstallmentPlan}</button>
     </form>
   );
 }

@@ -59,7 +59,14 @@
     "otherPerson": "Other person",
     "shared5050": "Shared 50/50",
     "optionalContext": "Optional context",
-    "addSharedTransaction": "Add shared transaction"
+    "addSharedTransaction": "Add shared transaction",
+    "planName": "Plan name",
+    "totalAmount": "Total amount",
+    "installmentAmount": "Monthly rate",
+    "totalInstallments": "Total installments",
+    "paidInstallments": "Already paid",
+    "startDate": "First payment date",
+    "addInstallmentPlan": "Add installment plan"
   },
   "imports": {
     "title": "Cashew import workspace",
@@ -85,7 +92,7 @@
   "reviewBuilder": {
     "eyebrow": "Review builder",
     "title": "Prepare a monthly review from Cashew",
-    "description": "Pick a period, assign review buckets by category, and inspect only that month’s transactions directly below.",
+    "description": "Pick a period, assign review buckets by category, and inspect only that month's transactions directly below.",
     "availablePeriodsText": "Available periods: {value}",
     "selectedMonth": "Selected month",
     "fixed": "Fixed",
@@ -227,7 +234,13 @@
     "investmentsTitle": "Capital in versus value now",
     "investmentsDescription": "Use each entry as an account snapshot: name it clearly, pick the account, add the new contribution, and record the current total value on that date.",
     "totalInvested": "Total invested",
-    "gainLoss": "Gain / loss"
+    "gainLoss": "Gain / loss",
+    "installments": "Installment plans",
+    "installmentsTitle": "Leasing, financing and repayment schedules",
+    "installmentsDescription": "Track structured debt repayments so each plan's monthly impact and remaining balance are always visible alongside your net worth.",
+    "totalMonthlyCommitment": "Monthly commitment",
+    "totalRemaining": "Total remaining",
+    "activePlans": "Active plans"
   },
   "insights": {
     "monthlyMarginImproved": "Margin improved by {value} versus the previous review.",

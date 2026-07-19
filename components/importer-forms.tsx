@@ -17,7 +17,7 @@ export function CashewImportForm() {
   const [fileName, setFileName] = useState<string>(t.imports.noFileSelectedYet);
 
   return (
-    <form action={importCashewCsv} className="entry-form" encType="multipart/form-data">
+    <form action={importCashewCsv} className="entry-form">
       <div className="form-grid">
         <label className="field field-full">
           <span>{t.imports.csvExport}</span>
@@ -59,10 +59,10 @@ export function CashewExcludeToggle({
 }) {
   const t = getTranslations();
   return (
-    <form action={toggleCashewTransactionExclusion}>
+    <form action={toggleCashewTransactionExclusion} className="table-action-form">
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="excluded" value={excluded ? "false" : "true"} />
-      <button type="submit" className={excluded ? "ghost-button" : "warn-button"}>
+      <button type="submit" className={`${excluded ? "ghost-button" : "warn-button"} table-action-button`}>
         {excluded ? t.imports.include : t.imports.exclude}
       </button>
     </form>

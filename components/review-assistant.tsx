@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CashewExcludeToggle } from "@/components/importer-forms";
 import type { CashewTransaction } from "@/lib/db";
 import { formatCurrency, formatCurrencyByCode } from "@/lib/format";
+import { getSalaryMonthPeriod } from "@/lib/review-period";
 import { getTranslations } from "@/lib/translations";
 
 type ReviewBucket = "expenses" | "fixed" | "travel" | "extra" | "oneOff" | "ignore";
@@ -39,13 +40,14 @@ export function ReviewAssistant({ transactions }: { transactions: CashewTransact
   const t = getTranslations();
   const months = useMemo(
     () =>
-      [...new Set(transactions.filter((tx) => !tx.income && tx.amount < 0).map((tx) => tx.transactionDate.slice(0, 7)))].sort((a, b) =>
-        b.localeCompare(a)
+      [...new Set(transactions.filter((tx) => !tx.income && tx.amount < 0).map((tx) => getSalaryMonthPeriod(tx.transactionDate)))].sort(
+        (a, b) => b.localeCompare(a)
       ),
     [transactions]
   );
   const [selectedMonth, setSelectedMonth] = useState(months[0] ?? "");
   const effectiveSelectedMonth = months.includes(selectedMonth) ? selectedMonth : (months[0] ?? "");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [categorySettings, setCategorySettings] = useState<Record<string, CategorySettings>>({});
   const [conversionMap, setConversionMap] = useState<Record<string, number>>({});
   const [conversionError, setConversionError] = useState("");
@@ -54,9 +56,24 @@ export function ReviewAssistant({ transactions }: { transactions: CashewTransact
   const visibleTransactions = useMemo(
     () =>
       transactions
-        .filter((tx) => tx.transactionDate.slice(0, 7) === effectiveSelectedMonth && tx.amount < 0 && !tx.income)
+        .filter((tx) => getSalaryMonthPeriod(tx.transactionDate) === effectiveSelectedMonth && tx.amount < 0 && !tx.income)
         .sort((a, b) => b.transactionDate.localeCompare(a.transactionDate) || b.id - a.id),
     [effectiveSelectedMonth, transactions]
+  );
+  const categoryOptions = useMemo(
+    () =>
+      [...new Set(visibleTransactions.map((tx) => tx.subcategoryName || tx.categoryName || t.common.empty))].sort((a, b) =>
+        a.localeCompare(b)
+      ),
+    [t.common.empty, visibleTransactions]
+  );
+  const effectiveSelectedCategory = categoryOptions.includes(selectedCategory) ? selectedCategory : "all";
+  const filteredTransactions = useMemo(
+    () =>
+      effectiveSelectedCategory === "all"
+        ? visibleTransactions
+        : visibleTransactions.filter((tx) => (tx.subcategoryName || tx.categoryName || t.common.empty) === effectiveSelectedCategory),
+    [effectiveSelectedCategory, t.common.empty, visibleTransactions]
   );
 
   useEffect(() => {
@@ -225,6 +242,19 @@ export function ReviewAssistant({ transactions }: { transactions: CashewTransact
               </select>
             </div>
           </label>
+          <label className="field">
+            <span>{t.forms.category}</span>
+            <div className="select-shell">
+              <select className="select-input" value={effectiveSelectedCategory} onChange={(event) => setSelectedCategory(event.target.value)}>
+                <option value="all">{t.common.all}</option>
+                {categoryOptions.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </label>
         </div>
       </div>
 
@@ -315,7 +345,7 @@ export function ReviewAssistant({ transactions }: { transactions: CashewTransact
                 </tr>
               </thead>
               <tbody>
-                {visibleTransactions.map((tx) => (
+                {filteredTransactions.map((tx) => (
                   <tr key={tx.id}>
                     <td>{tx.transactionDate.slice(0, 10)}</td>
                     <td>

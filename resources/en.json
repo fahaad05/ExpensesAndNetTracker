@@ -12,6 +12,7 @@
     "insights": "Insights",
     "save": "Save",
     "delete": "Delete",
+    "all": "All",
     "empty": "—",
     "sourceFile": "Source file",
     "importedAt": "Imported at {value}",

@@ -10,7 +10,7 @@ const percentFormatter = new Intl.NumberFormat("en-CH", {
 });
 
 export function formatCurrency(value: number) {
-  return currencyFormatter.format(value);
+  return normalizeFormattedNumber(currencyFormatter.format(value));
 }
 
 export function formatPercent(value: number) {
@@ -18,9 +18,13 @@ export function formatPercent(value: number) {
 }
 
 export function formatCurrencyByCode(value: number, currency: string) {
-  return new Intl.NumberFormat("en-CH", {
+  return normalizeFormattedNumber(new Intl.NumberFormat("en-CH", {
     style: "currency",
     currency,
     maximumFractionDigits: 2
-  }).format(value);
+  }).format(value));
+}
+
+function normalizeFormattedNumber(value: string) {
+  return value.replaceAll("’", "'");
 }

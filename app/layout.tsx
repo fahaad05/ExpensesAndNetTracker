@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang={defaultLocale}>
+    <html lang={defaultLocale} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body>
         {children}
         <FloatingCalculator />

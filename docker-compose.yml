@@ -1,0 +1,11 @@
+services:
+  expenses:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8091:3000"
+    environment:
+      TRACKER_DB_PATH: /data/tracker.sqlite
+    volumes:
+      # il DB vero va copiato in ./data/tracker.sqlite (vedi piano di migrazione)
+      - ./data:/data

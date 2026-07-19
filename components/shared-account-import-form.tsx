@@ -11,7 +11,7 @@ export function SharedAccountImportForm() {
   const [fileName, setFileName] = useState<string>(t.imports.noFileSelectedYet);
 
   return (
-    <form action={importSharedAccountNotionCsv} className="entry-form compact-form" encType="multipart/form-data">
+    <form action={importSharedAccountNotionCsv} className="entry-form compact-form">
       <div className="form-grid">
         <label className="field field-full">
           <span>Legacy shared-expenses CSV</span>

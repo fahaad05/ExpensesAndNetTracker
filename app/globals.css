@@ -389,6 +389,8 @@ span {
 
 .select-shell {
   position: relative;
+  display: block;
+  width: 100%;
 }
 
 .select-shell::after {
@@ -405,17 +407,32 @@ span {
 }
 
 .select-input {
+  position: relative;
+  display: block;
   width: 100%;
+  min-height: 46px;
   appearance: none;
   border: 1px solid rgba(46, 60, 52, 0.14);
   border-radius: 14px;
   padding: 12px 40px 12px 14px;
   background: rgba(255, 252, 248, 0.95);
   color: var(--ink);
+  cursor: pointer;
 }
 
 .table-select {
+  width: 100%;
   min-width: 180px;
+}
+
+.table-select::after {
+  display: none;
+}
+
+.table-select .select-input {
+  appearance: auto;
+  min-width: 180px;
+  padding-right: 14px;
 }
 
 .category-cell {
@@ -781,11 +798,24 @@ small {
 
 .ghost-button,
 .warn-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
   border-radius: 999px;
   padding: 8px 12px;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.8);
   cursor: pointer;
+}
+
+.table-action-form,
+.table-action-button {
+  width: 100%;
+}
+
+.table-action-button {
+  min-width: 96px;
 }
 
 .warn-button {
@@ -813,6 +843,7 @@ small {
   display: grid;
   justify-items: end;
   gap: 12px;
+  pointer-events: none;
 }
 
 .floating-review {
@@ -823,6 +854,12 @@ small {
   display: grid;
   justify-items: end;
   gap: 12px;
+  pointer-events: none;
+}
+
+.floating-calculator > *,
+.floating-review > * {
+  pointer-events: auto;
 }
 
 .calculator-toggle {
@@ -870,6 +907,7 @@ small {
 }
 
 .floating-review-panel.is-hidden {
+  display: none;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;

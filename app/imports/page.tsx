@@ -9,6 +9,7 @@ import {
 import { FloatingMonthlyReview } from "@/components/floating-monthly-review";
 import { ReviewAssistant } from "@/components/review-assistant";
 import { getDashboardData } from "@/lib/db";
+import { getSalaryMonthPeriod } from "@/lib/review-period";
 import { getTranslations } from "@/lib/translations";
 
 function SectionHeader({
@@ -32,7 +33,9 @@ function SectionHeader({
 export default function ImportsPage() {
   const t = getTranslations();
   const data = getDashboardData();
-  const months = [...new Set(data.cashewTransactions.filter((tx) => !tx.income && tx.amount < 0).map((tx) => tx.transactionDate.slice(0, 7)))];
+  const months = [
+    ...new Set(data.cashewTransactions.filter((tx) => !tx.income && tx.amount < 0).map((tx) => getSalaryMonthPeriod(tx.transactionDate)))
+  ].sort((a, b) => b.localeCompare(a));
 
   return (
     <main className="page-shell">

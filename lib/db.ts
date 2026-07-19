@@ -3,6 +3,8 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { mkdirSync } from "node:fs";
 
+import { getSalaryMonthPeriod } from "@/lib/review-period";
+
 const configuredDbPath = process.env.TRACKER_DB_PATH?.trim();
 const dbPath = configuredDbPath
   ? path.resolve(configuredDbPath)
@@ -283,7 +285,7 @@ function getCashewReportCurrency(row: Pick<CashewImportRow, "currency">) {
 }
 
 function deriveCashewImportLabel(rows: CashewImportRow[]) {
-  const reviewMonths = [...new Set(rows.map((row) => getCashewReviewMonth(row.transactionDate)))].sort();
+  const reviewMonths = [...new Set(rows.map((row) => getSalaryMonthPeriod(row.transactionDate)))].sort();
 
   if (reviewMonths.length === 0) {
     return "Untitled import";
@@ -301,12 +303,6 @@ function deriveCashewImportLabel(rows: CashewImportRow[]) {
   }
 
   return `${formatMonth(reviewMonths[0])} - ${formatMonth(reviewMonths.at(-1) ?? reviewMonths[0])}`;
-}
-
-function getCashewReviewMonth(transactionDate: string) {
-  const date = new Date(`${transactionDate.slice(0, 10)}T00:00:00Z`);
-  date.setUTCDate(date.getUTCDate() + 7);
-  return date.toISOString().slice(0, 7);
 }
 
 function addColumnIfMissing(tableName: string, columnName: string, definition: string) {

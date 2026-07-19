@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { ArrowUpRight, ChartColumn, HandCoins, Landmark, PiggyBank } from "lucide-react";
 import Link from "next/link";
 
